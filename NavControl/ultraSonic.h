@@ -7,6 +7,7 @@
 class ultraSonicSensorPair
 {
    public:
+<<<<<<< HEAD
      // Constructor
      ultraSonicSensorPair(int pin1, int pin2);
      

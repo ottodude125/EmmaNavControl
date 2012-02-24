@@ -17,6 +17,7 @@ ultraSonicSensorPair::ultraSonicSensorPair(int pin1, int pin2)
   analogPin2 = pin2;
 }
 
+
 // initialize up the sensor loops (each pair of sensors is in a loop so they don't interfere with each others readings)
 void ultraSonicSensorPair::setupUsSensor(int Rx, int Bw)
 {
@@ -45,9 +46,9 @@ float ultraSonicSensorPair::getUltrasonicDistance()
    }
    
    // add pin i's current distance into first array location
-   distance[0][0] = analogRead(analogPin1)*1.27; // factor of 1.27 to convert analog read value into cm
+   distance[0][0] = analogRead(analogPin1)*1.27; // factor of 1.27 to convert analog read value into cm 
    distance[1][0] = analogRead(analogPin2)*1.27; // factor of 1.27 to convert analog read value into cm
- 
+
 }
 
 

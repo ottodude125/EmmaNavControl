@@ -17,9 +17,9 @@
 class DriveControl
 {
    public:
-     // Constructor
+     // constructor
      DriveControl( int driveCtrlPins[6]);
-     
+          
      void initializePins(); // initialize the values set on interupt/data pins
      
      void setInteruptPinValues(); // update values set on the interupt/data pins
@@ -29,15 +29,17 @@ class DriveControl
      // process most recent values obtaine from ultrasonic sensors and decide what the interupt/data line values should be updated to
      void processNewDistances(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances]);
      
-
+     
+     // pin numbers mapping to the arduino board for all the interupt pins used
      private:
-       int digitalPin0; // pin numbers mapping to the arduino board for all the interupt pins used
+       int digitalPin0;
        int digitalPin1;
        int digitalPin2;
        int digitalPin3;
        int digitalPin4;
        int digitalPin5;
        int pinStatus[6]; // value to be place on pin 0 = LOW, 1 = HIGH 
+
     
 };
 

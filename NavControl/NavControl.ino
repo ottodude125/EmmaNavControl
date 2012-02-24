@@ -21,11 +21,10 @@
 *      * Notify drive control of what action to take
 */
 
-#include "Arduino.h"
+
 #include "defines.h"
 #include "ultraSonic.h"
 #include "DriveControl.h"
-#include "BusDriver.h"
 
 /**
 * Array to hold IR sensor pin #'s
@@ -34,6 +33,11 @@ const int irPins[numIRSensors] = {irSensorPinFL,
                                     irSensorPinFR,
                                     irSensorPinRL,
                                     irSensorPinRR};
+
+/**
+* Array of Two Most Recent IR Distance Values (FL,FR,RL,RR) <--- order of sensors in array
+*/
+float irDistances[numIRSensors][numIRDistances];
 
 /**
 * Array to hold Ultra Sonic sensor pin #'s
@@ -94,7 +98,6 @@ void setup()
   drive.initializePins();
     
   // this was previously at 9600 baud rate but the bus is running at 19200 so this has been changed    
-  
   Serial.begin(19200);
 
 }
