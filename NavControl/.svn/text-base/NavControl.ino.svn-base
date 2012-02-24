@@ -1,6 +1,12 @@
-
 /*
 *   Created 1/26/11
+*
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
+*   With additional assistance on network comminication by
+*      * Mathew Comeau
+*      * Thomas Pavlu
 *
 *    NavControl is the control center for managing the navigation system of Emma. 
 *    It will be in charge of:
@@ -16,15 +22,17 @@
 *              * 3 on each side facing at a downward angle to detect changes in terrain ( stairs (up or down), curb, cliff, etc)
 *              * 2 on each side placed horizontally to detect large obstacles ( wall, desk, chair, Professor Soules, etc)
 *        * Accelerometer
+*            * Function to be later determined
 *      * Process obstacle data and determine if drive system needs to be stopped to avoid accident
 *      * Notify drive control of what action to take
 */
 
-//#include "Arduino.h"
-//#include "WProgram.h"
+
+#include "Arduino.h"
 #include "defines.h"
 #include "ultraSonic.h"
 #include "DriveControl.h"
+
 
 /**
 * Array to hold IR sensor pin #'s
@@ -33,6 +41,7 @@ const int irPins[numIRSensors] = {irSensorPinFL,
                                     irSensorPinFR,
                                     irSensorPinRL,
                                     irSensorPinRR};
+
 /**
 * Array of Two Most Recent IR Distance Values (FL,FR,RL,RR) <--- order of sensors in array
 */
@@ -75,6 +84,7 @@ int drivePins[6] = {interuptL,
 // create an instance of DriveControl
 DriveControl drive(drivePins);
 
+// initialize pins, set up ultrasonic sensor loop pairs, set baud rate
 void setup()
 {  
   // set these pins as digital outputs
@@ -96,7 +106,8 @@ void setup()
   drive.initializePins();
     
   // this was previously at 9600 baud rate but the bus is running at 19200 so this has been changed    
-  Serial.begin(19200);   
+  Serial.begin(19200);
+
 }
 
 void loop()
@@ -105,12 +116,13 @@ void loop()
   //getIRDistance(irPins, irDistances);  
 
   // get current distances from Ultrasonic sensors
-  frontPair.getUltrasonicDistance_NEW();
-  backPair.getUltrasonicDistance_NEW();
-  leftPair.getUltrasonicDistance_NEW();
-  rightPair.getUltrasonicDistance_NEW();
+  frontPair.getUltrasonicDistance();
+  backPair.getUltrasonicDistance();
+  leftPair.getUltrasonicDistance();
+  rightPair.getUltrasonicDistance();
   
-  drive.processSensors(leftPair.distance, rightPair.distance, frontPair.distance, backPair.distance);
+  // process these new distances
+  drive.processNewDistances(leftPair.distance, rightPair.distance, frontPair.distance, backPair.distance);
   
   // call driveControl to update instructions to drive system
   drive.setInteruptPinValues();
@@ -120,6 +132,7 @@ void loop()
   
   delay(20);  
 }
+
 // Reset navigation system
 void reset()
 {
@@ -145,15 +158,6 @@ void reset()
 // Print out distances from all sensors
 void print()
 {  
-  // cycle through the array of distances
-  /*for(int i = 0; i < 1; i++)  //make sure to change these for loops to output the sensors you want... does not reflect polling code
-  {
-    Serial.print("IR Sensor #");
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.println(irDistances[i][0]);
-  }*/
-  
   //cycle through the array of ultrasonic distances
   Serial.print("FRONT(RIGHT: ");
   Serial.print(frontPair.distance[0][0]);//ussDistancesFront[0][0]);

@@ -1,5 +1,8 @@
 /*
-*    Created 2/1/11
+*   Created 2/1/11
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
 *
 *      The DriveControl is responsible for:
 *        1) Analyze the previous data obtained from the USS Sensors
@@ -8,10 +11,7 @@
 */
 
 
-//#include "Arduino.h"
 #include "DriveControl.h"
-//#include "defines.h"
-#include "ultraSonic.h"
 
 
 // Constructor
@@ -90,7 +90,8 @@ void DriveControl::setInteruptPinValues()
   
 }
 
-void DriveControl::processSensors(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances])
+// process the ultrasonic sensors and determine what the new interupt values should be set to
+void DriveControl::processNewDistances(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances])
 {
     float distances[8][numUssDistances];
   //populate array with distanceinformation

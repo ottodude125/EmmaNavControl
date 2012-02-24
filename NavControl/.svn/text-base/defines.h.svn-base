@@ -1,8 +1,17 @@
+/*
+*   Created 1/25/11
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
+*
+*      This header file contains all the project wide defined constants.
+*/
+
 #ifndef defines_h
 #define defines_h
 
 #include "Arduino.h"
-//#include "WProgram.h"
+
 
 // Constants specifying pins, number of sensors, and number of samples required for IR Sensors being used
 #define numIRSensors 4 // Specify number of IR Sensors being used

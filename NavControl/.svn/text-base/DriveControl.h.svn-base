@@ -1,5 +1,8 @@
 /*
-*    Created 2/1/11
+*   Created 2/1/11
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
 *
 *      The DriveControl is responsible for:
 *        1) Analyze the previous data obtained from the USS Sensors
@@ -14,13 +17,13 @@
 #include "Arduino.h"
 #include "defines.h"
 
+
 class DriveControl
 {
    public:
-     DriveControl( int driveCtrlPins[6]); // constructor
-     
-     int pinStatus[6]; // value to be place on pin 0 = LOW, 1 = HIGH 
-     
+     // constructor
+     DriveControl( int driveCtrlPins[6]);
+          
      void initializePins(); // initialize the values set on interupt/data pins
      
      void setInteruptPinValues(); // update values set on the interupt/data pins
@@ -28,7 +31,8 @@ class DriveControl
      void resetDriveControl( int driveOutPins[6]); // reset the interupt/data pin values
      
      // process most recent values obtaine from ultrasonic sensors and decide what the interupt/data line values should be updated to
-     void processSensors(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances]);
+     void processNewDistances(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances]);
+     
      
      // pin numbers mapping to the arduino board for all the interupt pins used
      private:
@@ -38,6 +42,8 @@ class DriveControl
        int digitalPin3;
        int digitalPin4;
        int digitalPin5;
+       int pinStatus[6]; // value to be place on pin 0 = LOW, 1 = HIGH 
+
     
 };
 
