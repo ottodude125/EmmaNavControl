@@ -1,5 +1,8 @@
 /*
-*    Created 2/1/11
+*   Created 2/1/11
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
 *
 *      The DriveControl is responsible for:
 *        1) Analyze the previous data obtained from the USS Sensors
@@ -13,6 +16,7 @@
 
 #include "Arduino.h"
 #include "defines.h"
+
 
 class DriveControl
 {

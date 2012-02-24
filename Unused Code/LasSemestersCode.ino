@@ -1,4 +1,5 @@
-// This is the origional file from the Fall '10
+// This is the origional file from the Fall '10 
+// All of it has since been deprecated and the project retooled
 
 
 //For now get rid of summing and averages, get it to work with just what is going on now, and then move into arrays

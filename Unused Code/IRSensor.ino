@@ -1,5 +1,6 @@
 /*
 *    Created 1/25/11
+* 	Jonathan Katon
 *
 *      The IR Sensor source code functionality is:
 *        * Obtain IR Sensor voltage readings from an analog input on Arduino board for given list of sensors

@@ -1,3 +1,12 @@
+/*
+*   Created 1/25/11
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
+*
+*      This header file contains all the project wide defined constants.
+*/
+
 #ifndef defines_h
 #define defines_h
 

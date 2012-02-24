@@ -6,6 +6,8 @@
 //
 // Purpose: This sketch will implement the accelerometer data.  It will calculate the position
 // and orientation of Emma 5 and feed it back to Houston.
+// 
+// The following Code has been written primarily by Ryan Kelly as of 5/2011
 //-------------------------------------------------------------------------------------------------
 
 #include <math.h>

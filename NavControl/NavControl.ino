@@ -1,6 +1,12 @@
-
 /*
 *   Created 1/26/11
+*
+*   Developed by and tested by
+*      * Jonathan Katon
+*      * Mike B.
+*   With additional assistance on network comminication by
+*      * Mathew Comeau
+*      * Thomas Pavlu
 *
 *    NavControl is the control center for managing the navigation system of Emma. 
 *    It will be in charge of:
@@ -22,9 +28,11 @@
 */
 
 
+#include "Arduino.h"
 #include "defines.h"
 #include "ultraSonic.h"
 #include "DriveControl.h"
+
 
 /**
 * Array to hold IR sensor pin #'s
