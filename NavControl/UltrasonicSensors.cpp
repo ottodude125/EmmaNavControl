@@ -10,7 +10,7 @@
 
 
 #include "ultraSonic.h"
-
+#include <stdint.h>
 
 // Constructor
 ultraSonicSensorPair::ultraSonicSensorPair(int pin1, int pin2)
@@ -50,8 +50,39 @@ float ultraSonicSensorPair::getUltrasonicDistance()
    
    // add pin i's current distance into first array location
    distance[0][0] = analogRead(analogPin1)*1.27; // factor of 1.27 to convert analog read value into cm 
-   distance[1][0] = analogRead(analogPin2)*1.27; // factor of 1.27 to convert analog read value into cm
+   distance[1][0] = analogRead(analogPin2)*1.27; // factor of 1.27 to convert analog read value into cmi
+   
+    
+   
+   // convert and store float values of two sensors into byte values to be transmitted to emma brain
+   
+   //***** SENSOR 1 *****//   
+   //***** Byte 1   *****//   
+   int temp1 = (int) (distance[0][0]);
+   temp1 = temp1 & 0x000000ff;
+   ussDistances4Brain[0] = (uint8_t) (temp1);  
 
+   //***** SENSOR 1 *****//   
+   //***** Byte 2   *****// 
+   temp1 = (int) (distance[0][0]);
+   temp1 = temp1 & 0x0000ff00;
+   temp1 = temp1 >> 8; 
+   ussDistances4Brain[1] = (uint8_t) (temp1);     
+   
+      
+   //***** SENSOR 2 *****//   
+   //***** Byte 1   *****// 
+   temp1 = (int) (distance[1][0]);
+   temp1 = temp1 & 0x000000ff;
+   ussDistances4Brain[2] = (uint8_t) (temp1);
+
+   //***** SENSOR 2 *****//   
+   //***** Byte 2   *****// 
+   temp1 = (int) (distance[1][0]);
+   temp1 = temp1 & 0x0000ff00;
+   temp1 = temp1 >> 8; 
+   ussDistances4Brain[3] = (uint8_t) (temp1);
+   
 }
 
 

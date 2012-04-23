@@ -12,19 +12,14 @@
 *    It will be in charge of:
 *      * Initialize all navigation systems
 *      * Obtain current distance values from:
-*        * IR Sensors
-*            * A precise measuring device to detect the distance of an obstacle
-*            * 4 sensors - Two facing forward and two facing rear  
-*            * Placed horizontally on the lower corners of robot
 *        * Ultrasonic Wave Sensors
-*            * A secondary measuring device to measure distances obstacles
+*            * A device to measure distances between robot and an obstacle
 *            * 20 sensors total
 *              * 3 on each side facing at a downward angle to detect changes in terrain ( stairs (up or down), curb, cliff, etc)
 *              * 2 on each side placed horizontally to detect large obstacles ( wall, desk, chair, Professor Soules, etc)
-*        * Accelerometer
-*            * Function to be later determined
 *      * Process obstacle data and determine if drive system needs to be stopped to avoid accident
 *      * Notify drive control of what action to take
+*      * Provide data requested by bus
 */
 
 
@@ -32,20 +27,10 @@
 #include "defines.h"
 #include "ultraSonic.h"
 #include "DriveControl.h"
+#include "BusDriver.h"
 
+extern BusDriver EmmaBus;
 
-/**
-* Array to hold IR sensor pin #'s
-*/ 
-const int irPins[numIRSensors] = {irSensorPinFL,
-                                    irSensorPinFR,
-                                    irSensorPinRL,
-                                    irSensorPinRR};
-
-/**
-* Array of Two Most Recent IR Distance Values (FL,FR,RL,RR) <--- order of sensors in array
-*/
-float irDistances[numIRSensors][numIRDistances];
 
 /**
 * Array to hold Ultra Sonic sensor pin #'s
@@ -72,7 +57,7 @@ ultraSonicSensorPair rightPair(6,7);
 
 
 /**
-* Array to hold pin #'s which output to drive system
+* Array to hold pin #'s which control drive system interupts
 */ 
 int drivePins[6] = {interuptL,
                             interuptR,
@@ -84,9 +69,18 @@ int drivePins[6] = {interuptL,
 // create an instance of DriveControl
 DriveControl drive(drivePins);
 
+// set true when a request from the bus has been received
+bool busDataRequest = false;
+
+// holds data to be transmitted over the bus
+uint8_t dangerousData[5];
+
+
 // initialize pins, set up ultrasonic sensor loop pairs, set baud rate
 void setup()
 {  
+  pinMode(13, OUTPUT);
+  
   // set these pins as digital outputs
   pinMode(bwPin, OUTPUT);
   pinMode(interuptL, OUTPUT);
@@ -102,18 +96,37 @@ void setup()
   leftPair.setupUsSensor(rxPinLeft, bwPin);
   rightPair.setupUsSensor(rxPinRight, bwPin);
   
-  // Initialize Drive Control Hardware Lines
+  // Initialize Drive Interupt Lines
   drive.initializePins();
-    
-  // this was previously at 9600 baud rate but the bus is running at 19200 so this has been changed    
-  Serial.begin(19200);
+   
+   
+  /************************************************************************************************************/ 
+  /**** EmmaBus.init() replaces the Serial.begin required by Arduino. Uncomment Serial.begin() and comment ****/
+  /**** out EmmaBus.init() and all EmmaBus.addFunctionToMyLut() when you want to run the code normally     ****/
+  /************************************************************************************************************/ 
+  // Setup the EmmaBus
+  EmmaBus.init(19200);
+  //Serial.begin(19200);
+  
+  
+  
+  // Initialize the functions which will receive calls from the bus
+  EmmaBus.addFunctionToMyLUT(sendFrontRightUssDistance, 0);
+  EmmaBus.addFunctionToMyLUT(sendFrontLeftUssDistance, 1);
+  EmmaBus.addFunctionToMyLUT(sendLeftFrontUssDistance, 2);
+  EmmaBus.addFunctionToMyLUT(sendLeftRearUssDistance, 3);  
+  EmmaBus.addFunctionToMyLUT(sendRearLeftUssDistance, 4);  
+  EmmaBus.addFunctionToMyLUT(sendRearRightUssDistance, 5);  
+  EmmaBus.addFunctionToMyLUT(sendRightRearUssDistance, 6);
+  EmmaBus.addFunctionToMyLUT(sendRightFrontUssDistance, 7);
 
 }
 
+/****************************/
+/*** Lovely Lollipop Loop ***/
+/****************************/
 void loop()
 {
-  // get an updated distance from IR Sensors
-  //getIRDistance(irPins, irDistances);  
 
   // get current distances from Ultrasonic sensors
   frontPair.getUltrasonicDistance();
@@ -121,19 +134,28 @@ void loop()
   leftPair.getUltrasonicDistance();
   rightPair.getUltrasonicDistance();
   
-  // process these new distances
-  drive.processNewDistances(leftPair.distance, rightPair.distance, frontPair.distance, backPair.distance);
+  // process the distances and determine the drive interupt line values
+  //drive.processNewDistances(leftPair.distance, rightPair.distance, frontPair.distance, backPair.distance);
   
-  // call driveControl to update instructions to drive system
-  drive.setInteruptPinValues();
+  // call driveControl to update interupt lines to drive system
+  //drive.setInteruptPinValues();
+   
+  // print out last distances read from sensors
+  // In order to run print() the bus EmmaBus.init() must be commented out and Serial.begin() uncommented per instructions provided in setup() above
+  //print();
   
-  // print out last distances read
-  print();
+  if(busDataRequest == true)
+  {
+    EmmaBus.writeDangerous(dangerousData);
+    busDataRequest == false;
+  }
   
-  delay(20);  
+
 }
 
-// Reset navigation system
+/*******************************/
+/*** Reset navigation system ***/
+/*******************************/
 void reset()
 {
   // set these pins as digital outputs
@@ -155,7 +177,136 @@ void reset()
   drive.resetDriveControl(drivePins);  
 }
 
+/****************************************************************************************************/
+/*** Methods for answering data requests from EmmaBrain. Each request returns five numbers.       ***/
+/*** The first number is the address of where the data is going, the second number is the command ***/
+/*** which was issued, and the third number is the address of the navigation system.              ***/
+/*** Following this are two bytes which are data you want to send. The first eight methods below  ***/
+/*** return the distance for a single sensor. The distance read from a sensor has been processed  ***/
+/*** in UltrasonicSensors.cpp and broken down into two unsigned bytes. These two bytes are then   ***/
+/*** The distance is in the form of two unsigned bytes which are sent in the same packet          ***/
+/****************************************************************************************************/
+void sendFrontLeftUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = frontPair.ussDistances4Brain[0];
+  dangerousData[4] = frontPair.ussDistances4Brain[1];
+}
+
+void sendFrontRightUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = frontPair.ussDistances4Brain[2];
+  dangerousData[4] = frontPair.ussDistances4Brain[3];		
+}
+
+void sendLeftRearUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = leftPair.ussDistances4Brain[0];
+  dangerousData[4] = leftPair.ussDistances4Brain[1];				
+}
+
+void sendLeftFrontUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = leftPair.ussDistances4Brain[2];
+  dangerousData[4] = leftPair.ussDistances4Brain[3];				
+}
+
+void sendRearLeftUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = backPair.ussDistances4Brain[0];
+  dangerousData[4] = backPair.ussDistances4Brain[1];				
+}
+
+void sendRearRightUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = backPair.ussDistances4Brain[2];
+  dangerousData[4] = backPair.ussDistances4Brain[3];				
+}
+
+void sendRightRearUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = rightPair.ussDistances4Brain[0];
+  dangerousData[4] = rightPair.ussDistances4Brain[1];				
+}
+
+void sendRightFrontUssDistance(uint8_t* bytePtr)
+{
+  busDataRequest = true;
+  dangerousData[0] = bytePtr[2];
+  dangerousData[1] = bytePtr[1];
+  dangerousData[2] = MY_ADDRESS;
+  dangerousData[3] = rightPair.ussDistances4Brain[2];
+  dangerousData[4] = rightPair.ussDistances4Brain[3];				
+}
+
+
+/*************************************/
+/*** METHODS FOR TESTING BUSDRIVER ***/
+/*************************************/
+
+// cplit up a float into two bytes
+void splitFloat()
+{
+  float test[2];
+  test[0] = 786.123;
+  
+  uint8_t byte0 = (int)(test[0]) & 0x000000ff;
+  uint8_t byte1 = (int)(test[0]) & 0x0000ff00;
+  
+  Serial.print("first: ");
+  Serial.print(byte0);
+  Serial.print("  second: ");
+  Serial.print(byte1);
+}
+
+// flash some led's
+void LED()
+{
+  static int ptrLED=3;
+  static bool polarity=true;
+  if(polarity) 
+    digitalWrite(ptrLED, HIGH);
+  else 
+    digitalWrite(ptrLED, LOW);
+	
+  ptrLED++;
+  
+  if(ptrLED==11) 
+  {
+    ptrLED=3;
+    polarity = !polarity;
+  }
+}
+
 // Print out distances from all sensors
+// Cannot be used when EmmaBus.init() is used
 void print()
 {  
   //cycle through the array of ultrasonic distances

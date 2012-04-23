@@ -43,6 +43,8 @@ class DriveControl
        int digitalPin4;
        int digitalPin5;
        int pinStatus[6]; // value to be place on pin 0 = LOW, 1 = HIGH 
+       float weightedAvg[numUssSensors];
+       int head;
 
     
 };

@@ -6,7 +6,7 @@
 *
 *      The DriveControl is responsible for:
 *        1) Analyze the previous data obtained from the USS Sensors
-*        2) Determine if the interup lines should be set to High if normal operation or Low for take action
+*        2) Determine if the interupt lines should be set to High if normal operation or Low for take action
 *        3) Set data lines high or low based on needs
 */
 
@@ -22,7 +22,13 @@ DriveControl::DriveControl(int driveCtrlPins[])
   digitalPin2 = driveCtrlPins[2]; // dataL0 
   digitalPin3 = driveCtrlPins[3]; // dataL1
   digitalPin4 = driveCtrlPins[4]; // dataR0
-  digitalPin5 = driveCtrlPins[5]; // dataR1  
+  digitalPin5 = driveCtrlPins[5]; // dataR1 
+ 
+  for(int i = 0; i < numUssSensors; i++)
+  {
+    weightedAvg[i] = 0;
+  }
+
 }
 
 // initialize the interupts to high and data bytes to low
@@ -91,19 +97,61 @@ void DriveControl::setInteruptPinValues()
 }
 
 // process the ultrasonic sensors and determine what the new interupt values should be set to
+// This method is a work in progress. The idea was that a weighted average would be incorporated
+// So if a bad reading was taken it would not cause a huge problem
 void DriveControl::processNewDistances(float left[2][numUssDistances], float right[2][numUssDistances], float front[2][numUssDistances], float back[2][numUssDistances])
 {
-    float distances[8][numUssDistances];
-  //populate array with distanceinformation
-   /*distance[0][0] = 
-   distance[1][0] =
-   distance[2][0] =
-   distance[3][0] =
-   distance[4][0] =
-   distance[5][0] =    ill get to this...
-   distance[6][0] =
-   distance[7][0] =*/
   
+  // update weighted averages
+  for(int i = 0; i < numUssDistances; i++)
+  {   
+    float alpha = 2/(i+1);
+    
+    if(i == 0)
+    {
+      weightedAvg[0] = left[0][0];
+      weightedAvg[1] = left[1][0];
+      weightedAvg[2] = right[0][0];
+      weightedAvg[3] = right[1][0];
+      weightedAvg[4] = front[0][0];
+      weightedAvg[5] = front[1][0];
+      weightedAvg[6] = back[0][0];      
+      weightedAvg[7] = back[1][0];      
+    }
+    else
+    {
+      weightedAvg[0] = weightedAvg[0] + alpha * (left[0][i] - weightedAvg[0]);
+      weightedAvg[1] = weightedAvg[1] + alpha * (left[1][i] - weightedAvg[1]);
+      weightedAvg[2] = weightedAvg[2] + alpha * (right[0][i] - weightedAvg[2]);
+      weightedAvg[3] = weightedAvg[3] + alpha * (right[1][i] - weightedAvg[3]);
+      weightedAvg[4] = weightedAvg[4] + alpha * (front[0][i] - weightedAvg[4]);
+      weightedAvg[5] = weightedAvg[5] + alpha * (front[1][i] - weightedAvg[5]);
+      weightedAvg[6] = weightedAvg[6] + alpha * (back[0][i] - weightedAvg[6]);
+      weightedAvg[7] = weightedAvg[7] + alpha * (back[1][i] - weightedAvg[7]); 
+    }
+    //newValue = oldValue + alpha * (value - oldValue);
+    //total[0]  = total[i] + alpha * (total[i+1] - total[i]);
+  }
+  
+    /*
+     class ExponentialMovingAverage {
+     private double alpha;
+     private Double oldValue;
+     public ExponentialMovingAverage(double alpha) {
+     this.alpha = alpha;
+     }
+     
+     public double average(double value) {
+     if (oldValue == null) {
+     oldValue = value;
+     return value;
+     }
+     double newValue = oldValue + alpha * (value - oldValue);
+     oldValue = newValue;
+     return newValue;
+     }
+     }
+*/
 }
 
 // reset the drive control system

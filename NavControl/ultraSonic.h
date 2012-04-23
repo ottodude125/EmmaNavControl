@@ -29,6 +29,9 @@ class ultraSonicSensorPair
      
      // array holding the measured distances from sensors
      float distance[2][numUssDistances];
+     
+     // array holding the float values of two sensors converted into byte values to be transmitted to emma brain
+     byte ussDistances4Brain[4];
 
    private:
      int analogPin1;
